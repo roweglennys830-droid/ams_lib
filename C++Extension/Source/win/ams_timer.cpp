@@ -28,8 +28,10 @@ VALUE AMS::Timer::su_timer_procedures;
 
 VALUE AMS::Timer::c_call_proc(VALUE v_args) {
     TimerData* data = reinterpret_cast<TimerData*>(v_args);
-    //rb_funcall(data->proc, RU::INTERN_CALL, 2, RU::to_value(data->count), RU::to_value(data->time));
-    rb_eval_cmd(data->proc, rb_ary_new3(2, RU::to_value(data->count), RU::to_value(data->time)), 0);
+    // Ruby 3.2 compatibility:
+    // rb_eval_cmd is no longer available/exported.
+    // data->proc is a Ruby Proc-like object, so call it directly.
+    rb_funcall(data->proc, rb_intern("call"), 2, RU::to_value(data->count), RU::to_value(data->time));
     return Qnil;
 }
 
