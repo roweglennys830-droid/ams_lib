@@ -9,7 +9,7 @@
 #ifndef GEOM_H
 #define GEOM_H
 
-#include <cmath>
+#include <math.h>
 
 #ifdef _MSC_VER
     #include <intrin.h>
