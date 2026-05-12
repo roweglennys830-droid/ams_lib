@@ -6,7 +6,48 @@
  * ---------------------------------------------------------------------------------------------------------------------
  */
 
+/*
+ * Compatibility patch for modern MSVC / VS2022.
+ *
+ * Old bundled Ruby headers may declare or define isnan / finite / isfinite
+ * in a way that conflicts with the modern MSVC <cmath> header.
+ *
+ * These HAVE_* flags tell Ruby's compatibility headers not to redeclare
+ * these math functions.
+ */
+#ifdef _MSC_VER
+    #ifndef HAVE_FINITE
+        #define HAVE_FINITE 1
+    #endif
+
+    #ifndef HAVE_ISNAN
+        #define HAVE_ISNAN 1
+    #endif
+
+    #ifndef HAVE_ISFINITE
+        #define HAVE_ISFINITE 1
+    #endif
+#endif
+
 #include "ruby_util_ext.h"
+
+/*
+ * Extra cleanup after including Ruby / Windows headers.
+ * If any legacy Ruby header still defines these as macros, remove them here.
+ */
+#ifdef _MSC_VER
+    #ifdef isnan
+        #undef isnan
+    #endif
+
+    #ifdef isfinite
+        #undef isfinite
+    #endif
+
+    #ifdef finite
+        #undef finite
+    #endif
+#endif
 
 
 /*
@@ -50,11 +91,13 @@ HMENU RU::value_to_hmenu(VALUE value, bool validate) {
         return handle;
     }
 }
+
 /*
 VALUE RU::to_value(const wchar_t* value) {
     unsigned int length = (unsigned int)wcslen(value);
     return to_value(value, length);
-}*/
+}
+*/
 
 VALUE RU::win_wc_str_to_value(const wchar_t* value, unsigned int length) {
     int num_bytes = WideCharToMultiByte(CP_UTF8, 0, value, length, nullptr, 0, NULL, NULL);
@@ -82,7 +125,8 @@ VALUE RU::win_wc_str_to_value(const wchar_t* value, unsigned int length) {
 
 //#ifdef HAVE_RUBY_ENCODING_H
 
-/*wchar_t* RU::value_to_win_wc_str(VALUE value) {
+/*
+wchar_t* RU::value_to_win_wc_str(VALUE value) {
     value = StringValue(value);
     char* mb_str = RSTRING_PTR(value);
 //#ifdef RUBY_VERSION18
@@ -99,18 +143,22 @@ VALUE RU::win_wc_str_to_value(const wchar_t* value, unsigned int length) {
     else {
         return wc_str;
     }
-}*/
+}
+*/
 
 //#else
 
-/*VALUE RU::win_wc_str_to_value(const wchar_t* value, unsigned int length) {
+/*
+VALUE RU::win_wc_str_to_value(const wchar_t* value, unsigned int length) {
     VALUE v_data(rb_ary_new2(length));
     for (unsigned int i = 0; i < length; ++i)
         rb_ary_store(v_data, i, INT2FIX(value[i]));
     return rb_funcall(v_data, INTERN_PACK, 1, rb_str_new2("U*"));
-}*/
+}
+*/
 
-/*wchar_t* RU::value_to_wc_str(VALUE value) {
+/*
+wchar_t* RU::value_to_wc_str(VALUE value) {
     value = StringValue(value);
     VALUE v_data = rb_funcall(value, INTERN_UNPACK, 1, rb_str_new2("U*"));
     unsigned int len = (unsigned int)RARRAY_LEN(v_data);
@@ -119,6 +167,7 @@ VALUE RU::win_wc_str_to_value(const wchar_t* value, unsigned int length) {
         buffer[i] = (wchar_t)NUM2INT(rb_ary_entry(v_data, i));
     buffer[len] = '\0';
     return buffer;
-}*/
+}
+*/
 
 //#endif
