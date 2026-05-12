@@ -295,7 +295,12 @@ void AMS::Sketchup::c_get_menu_commands(HMENU handle, const wchar_t* cur_path, i
 
 VALUE AMS::Sketchup::c_mbp_call_proc(VALUE v_args) {
     MessageboxData* data = reinterpret_cast<MessageboxData*>(v_args);
-    rb_eval_cmd(data->proc, rb_ary_new3(1, RU::to_value(data->result)), 0);
+
+    // Ruby 3.2 compatibility:
+    // rb_eval_cmd is no longer available/exported.
+    // data->proc is expected to be a Ruby Proc-like object, so call it directly.
+    rb_funcall(data->proc, rb_intern("call"), 1, RU::to_value(data->result));
+
     return Qnil;
 }
 
