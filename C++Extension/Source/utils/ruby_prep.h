@@ -26,6 +26,24 @@
 // http://stackoverflow.com/a/2789509/486990
 #define NOMINMAX
 
+// Patch for modern MSVC / VS2022.
+// Old bundled Ruby headers declare isnan / finite / isfinite in ways that
+// conflict with modern MSVC <cmath>. These HAVE_* flags tell Ruby headers
+// these functions already exist and should not be redeclared.
+#ifdef _MSC_VER
+    #ifndef HAVE_FINITE
+        #define HAVE_FINITE 1
+    #endif
+
+    #ifndef HAVE_ISNAN
+        #define HAVE_ISNAN 1
+    #endif
+
+    #ifndef HAVE_ISFINITE
+        #define HAVE_ISFINITE 1
+    #endif
+#endif
+
 // Ruby in SketchUp was configured with /MD and the headers reflect that.
 // And from Ruby version to Ruby version the configuration needs to be slightly
 // different. These macros smooth over this and should allow the project
@@ -69,14 +87,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 #include <ruby.h>
 #ifdef HAVE_RUBY_ENCODING_H
     #include <ruby/encoding.h>
 #endif
-    
+
 #ifdef __cplusplus
 }
+#endif
+
+// Patch for modern MSVC / VS2022.
+// Ruby win32 headers may define these as macros, which can break <cmath>.
+#ifdef _MSC_VER
+    #ifdef isnan
+        #undef isnan
+    #endif
+
+    #ifdef isfinite
+        #undef isfinite
+    #endif
+
+    #ifdef finite
+        #undef finite
+    #endif
 #endif
 
 // Compatibility Macros
@@ -174,7 +208,6 @@ extern "C" {
 #ifdef utime
     #undef utime
 #endif
-
 
 #ifdef close
     #undef close
